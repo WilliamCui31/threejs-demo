@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>tree example</title>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+    />
+    <style>
+      html,
+      body,
+      #container {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+    <script src="./js/three.js"></script>
+    <script src="./js/OBJLoader.js"></script>
+    <script>
+      var container;
+
+      var camera, scene, renderer;
+
+      var mouseX = 0,
+        mouseY = 0;
+
+      var windowHalfX = window.innerWidth / 2;
+      var windowHalfY = window.innerHeight / 2;
+
+      var object;
+
+      init();
+      animate();
+
+      // 初始化
+      function init() {
+        container = document.getElementById('container');
+        document.body.appendChild(container);
+
+        // 相机
+        camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000);
+        camera.position.z = 250;
+
+        // 场景
+        scene = new THREE.Scene();
+
+        // 环境光
+        var ambientLight = new THREE.AmbientLight(0xcccccc, 0.4);
+        scene.add(ambientLight);
+
+        // 点光源
+        var pointLight = new THREE.PointLight(0xffffff, 0.8);
+        camera.add(pointLight);
+        scene.add(camera);
+
+        // manager
+        function loadModel() {
+          object.traverse(function (child) {
+            if (child.isMesh) child.material.map = texture;
+          });
+
+          object.scale.set(10, 10, 10);
+          scene.add(object);
+        }
+        var manager = new THREE.LoadingManager(loadModel);
+        manager.onProgress = function (item, loaded, total) {
+          console.log(item, loaded, total);
+        };
+
+        // texture
+        var textureLoader = new THREE.TextureLoader(manager);
+        var texture = textureLoader.load('./textures/brick_diffuse.jpg');
+
+        // model
+        function onProgress(xhr) {
+          if (xhr.lengthComputable) {
+            var percentComplete = (xhr.loaded / xhr.total) * 100;
+            console.log('model ' + Math.round(percentComplete, 2) + '% downloaded');
+          }
+        }
+        function onError() {}
+        var loader = new THREE.OBJLoader(manager);
+        loader.load(
+          './models/tree.obj',
+          function (obj) {
+            object = obj;
+          },
+          onProgress,
+          onError
+        );
+
+        const geometry = new THREE.BoxGeometry(1, 1, 1);
+        const material = new THREE.MeshBasicMaterial({ color: '#00f' });
+        const cube = new THREE.Mesh(geometry, material);
+        camera.add(cube);
+
+        // renderer
+        renderer = new THREE.WebGLRenderer();
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth - 10, window.innerHeight - 10);
+        container.appendChild(renderer.domElement);
+
+        // 监听事件
+        document.addEventListener('mousemove', onDocumentMouseMove, false);
+        window.addEventListener('resize', onWindowResize, false);
+      }
+
+      // 窗口改变大小事件
+      function onWindowResize() {
+        windowHalfX = window.innerWidth / 2;
+        windowHalfY = window.innerHeight / 2;
+
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(window.innerWidth - 10, window.innerHeight - 10);
+      }
+
+      // 鼠标移动事件
+      function onDocumentMouseMove(event) {
+        mouseX = (event.clientX - windowHalfX) / 2;
+        mouseY = (event.clientY - windowHalfY) / 2;
+      }
+
+      // 动画
+      function animate() {
+        requestAnimationFrame(animate);
+        render();
+      }
+
+      // 渲染
+      function render() {
+        camera.position.x += (mouseX - camera.position.x) * 0.05;
+        camera.position.y += (-mouseY - camera.position.y) * 0.05;
+
+        camera.lookAt(scene.position);
+
+        renderer.render(scene, camera);
+      }
+    </script>
+  </body>
+</html>
