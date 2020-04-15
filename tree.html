@@ -93,10 +93,16 @@
           onError
         );
 
-        const geometry = new THREE.BoxGeometry(1, 1, 1);
-        const material = new THREE.MeshBasicMaterial({ color: '#00f' });
-        const cube = new THREE.Mesh(geometry, material);
-        cube.position.set(10, 10,10);
+        const squareShape = new THREE.Shape();
+        squareShape.moveTo(0, 0);
+        squareShape.lineTo(0, 20);
+        squareShape.lineTo(20, 20);
+        squareShape.lineTo(20, 0);
+        squareShape.lineTo(0, 0);
+
+        const geometry = new THREE.ShapeBufferGeometry(squareShape);
+        const cube = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial());
+        cube.position.set(10, 40, 30);
         scene.add(cube);
 
         // renderer
