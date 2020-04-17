@@ -19,7 +19,7 @@
   <body>
     <div id="container"></div>
     <script src="./js/three.js"></script>
-    <script src="./js/OBJLoader.js"></script>
+    <script src="./loaders/OBJLoader.js"></script>
     <script>
       var container;
 
@@ -32,6 +32,11 @@
       var windowHalfY = window.innerHeight / 2;
 
       var object;
+
+      var raycaster = new THREE.Raycaster();
+      var mouse = new THREE.Vector2();
+
+      var avatar1, avatar2;
 
       init();
       animate();
@@ -60,7 +65,7 @@
         // manager
         function loadModel() {
           object.traverse(function (child) {
-            if (child.isMesh) child.material.map = texture;
+            if (child.name) child.material.map = texture;
           });
 
           object.scale.set(10, 10, 10);
@@ -87,23 +92,30 @@
         loader.load(
           './models/tree.obj',
           function (obj) {
+            // 头像1
+            const avatarImag1 = textureLoader.load('./img/geren.png');
+            const geometry1 = new THREE.CircleBufferGeometry(7, 100);
+            const material1 = new THREE.MeshBasicMaterial({ map: avatarImag1, reflectivity: 0.5 });
+            material1.side = THREE.DoubleSide;
+            avatar1 = new THREE.Mesh(geometry1, material1);
+            avatar1.position.set(10, 40, 29);
+            obj.children.push(avatar1);
+
+            // 头像2
+            const avatarImag2 = textureLoader.load('./img/hezuohuoban.png');
+            const geometry2 = new THREE.CircleBufferGeometry(7, 100);
+            const material2 = new THREE.MeshBasicMaterial({ map: avatarImag2 });
+            material2.side = THREE.DoubleSide;
+            avatar2 = new THREE.Mesh(geometry2, material2);
+            avatar2.position.set(-40, 50, 9);
+            obj.children.push(avatar2);
+
             object = obj;
+            console.log('obj: ', obj);
           },
           onProgress,
           onError
         );
-
-        const squareShape = new THREE.Shape();
-        squareShape.moveTo(0, 0);
-        squareShape.lineTo(0, 20);
-        squareShape.lineTo(20, 20);
-        squareShape.lineTo(20, 0);
-        squareShape.lineTo(0, 0);
-
-        const geometry = new THREE.ShapeBufferGeometry(squareShape);
-        const cube = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial());
-        cube.position.set(10, 40, 30);
-        scene.add(cube);
 
         // renderer
         renderer = new THREE.WebGLRenderer();
@@ -129,6 +141,10 @@
 
       // 鼠标移动事件
       function onDocumentMouseMove(event) {
+        // 将鼠标位置归一化为设备坐标。x 和 y 方向的取值范围是 (-1 to +1)
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
         mouseX = (event.clientX - windowHalfX) / 2;
         mouseY = (event.clientY - windowHalfY) / 2;
       }
@@ -136,11 +152,30 @@
       // 动画
       function animate() {
         requestAnimationFrame(animate);
+
         render();
       }
 
       // 渲染
-      function render() {
+      function render(i) {
+        // 通过摄像机和鼠标位置更新射线
+        raycaster.setFromCamera(mouse, camera);
+
+        // 计算物体和射线的焦点
+        var intersects = raycaster.intersectObjects(scene.children, true);
+
+        if (intersects.length != 0) {
+          if (intersects[0].object instanceof THREE.Mesh && !intersects[0].object.name) {
+            const color = 0xffffff * Math.random();
+            intersects[0].object.material.color.set(color);
+          }
+        }
+
+        scene.rotation.y -= 0.01;
+        if (object) {
+          object.rotation.y += 0.01;
+        }
+
         camera.position.x += (mouseX - camera.position.x) * 0.05;
         camera.position.y += (-mouseY - camera.position.y) * 0.05;
 
