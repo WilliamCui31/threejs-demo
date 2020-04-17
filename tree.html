@@ -64,10 +64,6 @@
 
         // manager
         function loadModel() {
-          object.traverse(function (child) {
-            if (child.name) child.material.map = texture;
-          });
-
           object.scale.set(10, 10, 10);
           scene.add(object);
         }
@@ -98,7 +94,7 @@
             const material1 = new THREE.MeshBasicMaterial({ map: avatarImag1, reflectivity: 0.5 });
             material1.side = THREE.DoubleSide;
             avatar1 = new THREE.Mesh(geometry1, material1);
-            avatar1.text = "崔伟林";
+            avatar1.text = '崔伟林';
             avatar1.position.set(10, 40, 29);
             obj.children.push(avatar1);
 
@@ -108,7 +104,7 @@
             const material2 = new THREE.MeshBasicMaterial({ map: avatarImag2 });
             material2.side = THREE.DoubleSide;
             avatar2 = new THREE.Mesh(geometry2, material2);
-            avatar2.text = "王小康";
+            avatar2.text = '王小康';
             avatar2.position.set(-40, 50, 12);
             obj.children.push(avatar2);
 
@@ -126,19 +122,19 @@
         container.appendChild(renderer.domElement);
 
         // 监听事件
-        document.addEventListener('dblclick', onMouseDblclick, false);
+        document.addEventListener('click', onMouseDblclick, false);
         document.addEventListener('mousemove', onDocumentMouseMove, false);
         window.addEventListener('resize', onWindowResize, false);
       }
 
       // 改变对象材质属性
-      function changeMaterial(object) {
+      function changeMaterial(obj) {
         var material = new THREE.MeshBasicMaterial({
           color: 0xffffff * Math.random(),
-          transparent: object.material.transparent ? false : true,
+          transparent: obj.material.transparent ? false : true,
           opacity: 0.8,
         });
-        object.material = material;
+        obj.material = material;
       }
 
       // 更新div的位置
@@ -195,7 +191,7 @@
           !intersects[0].object.parent
         ) {
           selectObject = intersects[0].object;
-          // changeMaterial(selectObject);
+          changeMaterial(selectObject);
         }
       }
 
