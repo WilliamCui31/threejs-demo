@@ -14,21 +14,20 @@
         margin: 0;
         padding: 0;
       }
-      #label {
+      .label {
         position: absolute;
         padding: 10px;
         background: rgba(255, 255, 255, 0.6);
         line-height: 1;
         border-radius: 5px;
+        transition: all .1s linear;
       }
     </style>
   </head>
   <body>
     <div id="container"></div>
-    <div id="label"></div>
     <script src="./js/three.js"></script>
     <script src="./loaders/OBJLoader.js"></script>
-    <script src="./js/jquery-3.5.0.min.js"></script>
     <script>
       var container, camera, scene, renderer, selectObject, object, avatar1, avatar2;
 
@@ -146,13 +145,18 @@
         // 逆转相机求出二维坐标
         var vector = object.position.clone().project(camera);
 
+        // 设置信息框
+        var label = document.getElementById(object.uuid) || document.createElement('div');
+        label.id = object.uuid;
+        label.className = 'label';
+        document.body.appendChild(label);
         // 修改 div 的位置
-        $('#label').css({
-          left: vector.x * halfWidth + halfWidth,
-          top: -vector.y * halfHeight + halfHeight - object.position.y,
-        });
+        label.style.cssText = `
+          left: ${vector.x * halfWidth + halfWidth}px;
+          top: ${-vector.y * halfHeight + halfHeight - object.position.y}px
+        `;
         // 显示模型信息
-        $('#label').text('name:' + object.text);
+        label.innerText = 'name:' + object.text;
       }
 
       // 获取与射线相交的对象数组
@@ -224,11 +228,16 @@
         scene.rotation.y -= 0.01;
         if (object) {
           object.rotation.y += 0.01;
+          object.children.forEach((mesh) => {
+            if (!mesh.parent) {
+              renderDiv(mesh);
+            }
+          });
         }
 
-        if (selectObject != undefined && selectObject != null) {
-          renderDiv(selectObject);
-        }
+        // if (selectObject != undefined && selectObject != null) {
+        //   renderDiv(selectObject);
+        // }
 
         camera.position.x += (mouseX - camera.position.x) * 0.05;
         camera.position.y += (-mouseY - camera.position.y) * 0.05;
