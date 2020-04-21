@@ -14,25 +14,35 @@
         margin: 0;
         padding: 0;
       }
+      #litUp {
+        position: absolute;
+        left: 50%;
+        bottom: 100px;
+        width: 200px;
+        height: 50px;
+        font-size: 20px;
+        text-align: center;
+        cursor: pointer;
+        transform: translateX(-50%);
+      }
       .label {
         position: absolute;
         padding: 10px;
         background: rgba(255, 255, 255, 0.6);
         line-height: 1;
         border-radius: 5px;
-        transition: all .1s linear;
+        transition: all 0.1s linear;
       }
     </style>
   </head>
   <body>
     <div id="container"></div>
+    <button id="litUp">点亮生态树</button>
     <script src="./js/three.js"></script>
     <script src="./loaders/OBJLoader.js"></script>
+    <script src="./controls/OrbitControls.js"></script>
     <script>
-      var container, camera, scene, renderer, selectObject, object, avatar1, avatar2;
-
-      var mouseX = 0,
-        mouseY = 0;
+      var container, camera, scene, renderer, controls, selectObject, object, avatar1, avatar2;
 
       var windowHalfX = window.innerWidth / 2;
       var windowHalfY = window.innerHeight / 2;
@@ -53,12 +63,9 @@
         scene = new THREE.Scene();
 
         // 环境光
-        var ambientLight = new THREE.AmbientLight(0xcccccc, 0.4);
+        var ambientLight = new THREE.AmbientLight(0xcccccc, 0.2);
         scene.add(ambientLight);
 
-        // 点光源
-        var pointLight = new THREE.PointLight(0xffffff, 0.8);
-        camera.add(pointLight);
         scene.add(camera);
 
         // manager
@@ -90,7 +97,11 @@
             // 头像1
             const avatarImag1 = textureLoader.load('./img/geren.png');
             const geometry1 = new THREE.CircleBufferGeometry(7, 100);
-            const material1 = new THREE.MeshBasicMaterial({ map: avatarImag1, reflectivity: 0.5 });
+            const material1 = new THREE.MeshBasicMaterial({
+              map: avatarImag1,
+              transparent: true,
+              opacity: 0.2,
+            });
             material1.side = THREE.DoubleSide;
             avatar1 = new THREE.Mesh(geometry1, material1);
             avatar1.text = '崔伟林';
@@ -100,7 +111,11 @@
             // 头像2
             const avatarImag2 = textureLoader.load('./img/hezuohuoban.png');
             const geometry2 = new THREE.CircleBufferGeometry(7, 100);
-            const material2 = new THREE.MeshBasicMaterial({ map: avatarImag2 });
+            const material2 = new THREE.MeshBasicMaterial({
+              map: avatarImag2,
+              transparent: true,
+              opacity: 0.2,
+            });
             material2.side = THREE.DoubleSide;
             avatar2 = new THREE.Mesh(geometry2, material2);
             avatar2.text = '王小康';
@@ -120,20 +135,23 @@
         renderer.setSize(window.innerWidth - 10, window.innerHeight - 10);
         container.appendChild(renderer.domElement);
 
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.update();
+
         // 监听事件
-        document.addEventListener('click', onMouseDblclick, false);
-        document.addEventListener('mousemove', onDocumentMouseMove, false);
+        document.addEventListener('click', onClick, false);
         window.addEventListener('resize', onWindowResize, false);
       }
 
       // 改变对象材质属性
-      function changeMaterial(obj) {
-        var material = new THREE.MeshBasicMaterial({
-          color: 0xffffff * Math.random(),
-          transparent: obj.material.transparent ? false : true,
-          opacity: 0.8,
+      function focusAvatar(selectObject) {
+        // 获取选中最近的 Mesh 对象
+        object.children.forEach((mesh) => {
+          if (!mesh.parent) {
+            mesh.material.opacity = 0.5;
+          }
         });
-        obj.material = material;
+        selectObject.material.opacity = 1;
       }
 
       // 更新div的位置
@@ -183,19 +201,18 @@
         return intersects;
       }
 
-      // 鼠标双击触发的方法
-      function onMouseDblclick(event) {
+      // 单击
+      function onClick(event) {
         // 获取 raycaster 和所有模型相交的数组，其中的元素按照距离排序，越近的越靠前
         var intersects = getIntersects(event);
 
-        // 获取选中最近的 Mesh 对象
         if (
           intersects.length != 0 &&
           intersects[0].object instanceof THREE.Mesh &&
           !intersects[0].object.parent
         ) {
-          selectObject = intersects[0].object;
-          changeMaterial(selectObject);
+          const selectObject = intersects[0].object;
+          focusAvatar(selectObject);
         }
       }
 
@@ -210,24 +227,18 @@
         renderer.setSize(window.innerWidth - 10, window.innerHeight - 10);
       }
 
-      // 鼠标移动事件
-      function onDocumentMouseMove(event) {
-        mouseX = (event.clientX - windowHalfX) / 2;
-        mouseY = (event.clientY - windowHalfY) / 2;
-      }
-
       // 动画
       function animate() {
         requestAnimationFrame(animate);
+
+        controls.update();
 
         render();
       }
 
       // 渲染
       function render(i) {
-        scene.rotation.y -= 0.01;
         if (object) {
-          object.rotation.y += 0.01;
           object.children.forEach((mesh) => {
             if (!mesh.parent) {
               renderDiv(mesh);
@@ -239,13 +250,20 @@
         //   renderDiv(selectObject);
         // }
 
-        camera.position.x += (mouseX - camera.position.x) * 0.05;
-        camera.position.y += (-mouseY - camera.position.y) * 0.05;
-
         camera.lookAt(scene.position);
 
         renderer.render(scene, camera);
       }
+
+      const litBtn = document.getElementById('litUp');
+
+      litBtn.addEventListener('click', function () {
+        // 点光源
+        var pointLight = new THREE.PointLight(0xffffff, 0.8);
+        avatar1.material.opacity = 0.5;
+        avatar2.material.opacity = 0.5;
+        camera.add(pointLight);
+      });
     </script>
   </body>
 </html>
