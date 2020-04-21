@@ -164,8 +164,8 @@
         var vector = object.position.clone().project(camera);
 
         // 设置信息框
-        var label = document.getElementById(object.uuid) || document.createElement('div');
-        label.id = object.uuid;
+        var label = document.getElementById('label') || document.createElement('div');
+        label.id = 'label';
         label.className = 'label';
         document.body.appendChild(label);
         // 修改 div 的位置
@@ -211,7 +211,7 @@
           intersects[0].object instanceof THREE.Mesh &&
           !intersects[0].object.parent
         ) {
-          const selectObject = intersects[0].object;
+          selectObject = intersects[0].object;
           focusAvatar(selectObject);
         }
       }
@@ -238,17 +238,17 @@
 
       // 渲染
       function render(i) {
-        if (object) {
-          object.children.forEach((mesh) => {
-            if (!mesh.parent) {
-              renderDiv(mesh);
-            }
-          });
-        }
-
-        // if (selectObject != undefined && selectObject != null) {
-        //   renderDiv(selectObject);
+        // if (object) {
+        //   object.children.forEach((mesh) => {
+        //     if (!mesh.parent) {
+        //       renderDiv(mesh);
+        //     }
+        //   });
         // }
+
+        if (selectObject != undefined && selectObject != null) {
+          renderDiv(selectObject);
+        }
 
         camera.lookAt(scene.position);
 
