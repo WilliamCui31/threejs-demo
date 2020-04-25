@@ -74,30 +74,37 @@
         this.y = y;
         this.r = 2 + Math.random() * 8;
         this.alpha = (Math.floor(Math.random() * 10) + 1) / 10 / 2;
-
+        this.shadowBlur = this.r;
         const colorArr = ['#5582F3', '#29C392', '#6869FB'];
         this.color = colorArr[Math.floor(Math.random() * 3)];
       }
 
       Star.prototype.draw = function () {
+        ctx.save();
         ctx.fillStyle = this.color;
-        ctx.shadowBlur = this.r * 1;
+        ctx.shadowBlur = this.shadowBlur;
         ctx.shadowColor = colorRgba('#fff', this.alpha);
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI, false);
         ctx.closePath();
         ctx.fill();
+        ctx.restore();
       };
 
       Star.prototype.glint = function () {
-        this.y -= 0.1;
-        if (this.y <= -10) this.y = HEIGHT + 10;
+        if (this.shadowBlur > this.r) {
+          this.shadowBlur = this.shadowBlur / 2;
+        } else {
+          this.shadowBlur = this.shadowBlur * 2;
+        }
         this.draw();
       };
 
       Star.prototype.move = function (x, y) {
-        this.x = x;
-        this.y = y;
+        var vx = (x - this.x) * 0.3;
+        var vy = (y - this.y) * 0.3;
+        this.x += vx;
+        this.y += vy;
         this.draw();
       };
 
@@ -134,36 +141,28 @@
         ctx.clearRect(0, 0, WIDTH, HEIGHT);
 
         for (var i in stars) {
-          stars[i].draw();
+          stars[i].glint();
         }
+
         requestAnimationFrame(animate);
       }
 
       //点亮生态树
       const lightUpBtn = document.getElementById('lightUp');
-      lightUpBtn.addEventListener('click', moveStar);
+      lightUpBtn.addEventListener('click', function () {
+        raf = requestAnimationFrame(moveStar);
+      });
 
       //移动star
       function moveStar() {
-        let i = 0;
-        while (i < stars.length) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        stars.forEach((star) => {
           const screenW = document.documentElement.clientWidth;
           const screenH = document.documentElement.clientHeight;
           const circlePath = getCirclePath(screenW / 2, screenH / 2, screenH * 0.3);
-          if (stars[i].x > circlePath.x) {
-            stars[i].x -= 1;
-          } else if (stars[i].x < circlePath.x) {
-            stars[i].x += 1;
-          }
-          if (stars[i].y > circlePath.y) {
-            stars[i].y -= 1;
-          } else if (stars[i].y < circlePath.y) {
-            stars[i].y += 1;
-          }
-          stars[i].draw();
-        }
-
-        requestAnimationFrame(moveStar);
+          star.move(circlePath.x, circlePath.y);
+        });
+        raf = requestAnimationFrame(moveStar);
       }
 
       // 给定圆心坐标和半径填充圆形
