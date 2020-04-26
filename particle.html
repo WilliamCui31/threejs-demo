@@ -73,8 +73,8 @@
       };
 
       Star.prototype.move = function ({ x, y }) {
-        const vx = (x - this.x) * 0.18;
-        const vy = (y - this.y) * 0.18;
+        const vx = (x - this.x) * 0.4;
+        const vy = (y - this.y) * 0.4;
         if (this.x !== x) this.x += vx;
         if (this.y !== y) this.y += vy;
         this.draw();
