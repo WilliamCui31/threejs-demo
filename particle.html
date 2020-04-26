@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>粒子demo</title>
     <style>
       html,
@@ -12,26 +14,6 @@
         height: 100%;
         background: black;
         background: linear-gradient(to bottom, #000000 0%, #5788fe 100%);
-      }
-      .filter {
-        width: 100%;
-        height: 100%;
-        position: absolute;
-        top: 0;
-        left: 0;
-        background: #fe5757;
-        animation: colorChange 30s ease-in-out infinite;
-        animation-fill-mode: both;
-        mix-blend-mode: overlay;
-      }
-      @keyframes colorChange {
-        0%,
-        100% {
-          opacity: 0;
-        }
-        50% {
-          opacity: 0.9;
-        }
       }
       .landscape {
         position: absolute;
@@ -63,7 +45,6 @@
   </head>
   <body cz-shortcut-listen="true">
     <div class="landscape"></div>
-    <div class="filter"></div>
     <canvas id="canvas" width="2144" height="1204"></canvas>
     <button id="lightUp">点亮生态树</button>
     <div id="title-desktop" class="hidden">Bluestep</div>
@@ -74,15 +55,15 @@
         this.y = y;
         this.r = 2 + Math.random() * 8;
         this.alpha = (Math.floor(Math.random() * 10) + 1) / 10 / 2;
-        this.shadowBlur = this.r;
-        const colorArr = ['#5582F3', '#29C392', '#6869FB'];
-        this.color = colorArr[Math.floor(Math.random() * 3)];
+
+        const colorArr = ['#2185ED', '#04CCFD', '#03C7C7', '#9F6DFF'];
+        this.color = colorArr[Math.floor(Math.random() * 4)];
       }
 
       Star.prototype.draw = function () {
         ctx.save();
         ctx.fillStyle = this.color;
-        ctx.shadowBlur = this.shadowBlur;
+        ctx.shadowBlur = this.r;
         ctx.shadowColor = colorRgba('#fff', this.alpha);
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI, false);
@@ -91,20 +72,11 @@
         ctx.restore();
       };
 
-      Star.prototype.glint = function () {
-        if (this.shadowBlur > this.r) {
-          this.shadowBlur = this.shadowBlur / 2;
-        } else {
-          this.shadowBlur = this.shadowBlur * 2;
-        }
-        this.draw();
-      };
-
-      Star.prototype.move = function (x, y) {
-        var vx = (x - this.x) * 0.3;
-        var vy = (y - this.y) * 0.3;
-        this.x += vx;
-        this.y += vy;
+      Star.prototype.move = function ({ x, y }) {
+        const vx = (x - this.x) * 0.18;
+        const vy = (y - this.y) * 0.18;
+        if (this.x !== x) this.x += vx;
+        if (this.y !== y) this.y += vy;
         this.draw();
       };
 
@@ -112,8 +84,9 @@
         ctx = canvas.getContext('2d'),
         WIDTH,
         HEIGHT,
+        raf,
         stars = [],
-        initStarsPopulation = 400;
+        initStarsPopulation = 1000;
 
       setCanvasSize();
       init();
@@ -128,41 +101,40 @@
 
       function init() {
         for (var i = 0; i < initStarsPopulation; i++) {
+          const directionX = Math.random() < 0.5 ? -1 : 1;
+          const directionY = Math.random() < 0.5 ? -1 : 1;
+          const spreadX = directionX ? 2 : 1;
+          const spreadY = directionY ? 2 : 1;
           stars[i] = new Star(
             i,
-            Math.floor(Math.random() * WIDTH * 2),
-            Math.floor(Math.random() * HEIGHT * 2)
+            directionX * Math.floor(Math.random() * WIDTH * spreadX),
+            directionY * Math.floor(Math.random() * HEIGHT * spreadY)
           );
+          stars[i].draw();
         }
-        animate();
-      }
-
-      function animate() {
-        ctx.clearRect(0, 0, WIDTH, HEIGHT);
-
-        for (var i in stars) {
-          stars[i].glint();
-        }
-
-        requestAnimationFrame(animate);
       }
 
       //点亮生态树
       const lightUpBtn = document.getElementById('lightUp');
       lightUpBtn.addEventListener('click', function () {
-        raf = requestAnimationFrame(moveStar);
+        raf = requestAnimationFrame(polymeric);
+        setTimeout(() => {
+          cancelAnimationFrame(raf);
+        }, 3000);
       });
 
-      //移动star
-      function moveStar() {
+      //聚合star
+      function polymeric() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        stars.forEach((star) => {
-          const screenW = document.documentElement.clientWidth;
-          const screenH = document.documentElement.clientHeight;
-          const circlePath = getCirclePath(screenW / 2, screenH / 2, screenH * 0.3);
-          star.move(circlePath.x, circlePath.y);
+        stars.forEach((star, index) => {
+          if (!star.circlePos) {
+            const screenW = document.documentElement.clientWidth;
+            const screenH = document.documentElement.clientHeight;
+            star.circlePos = getCirclePath(screenW / 2, screenH / 2, screenH * 0.3);
+          }
+          star.move(star.circlePos);
         });
-        raf = requestAnimationFrame(moveStar);
+        raf = requestAnimationFrame(polymeric);
       }
 
       // 给定圆心坐标和半径填充圆形

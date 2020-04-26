@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -26,14 +26,13 @@
       .star {
         position: absolute;
         border-radius: 50%;
-        transition: all 0.2s ease-in;
+        transition: all 1s linear;
       }
     </style>
   </head>
   <body>
     <button id="lightUp">点亮生态树</button>
     <script>
-
       // 十六进制颜色值转rgba
       function colorRgba(sHex, alpha) {
         // 十六进制颜色值的正则表达式
@@ -69,7 +68,7 @@
         return { x: targetX, y: targetY };
       }
 
-      const colorArr = ['#fff', '#ff0', '#00f'];
+      const colorArr = ['#2185ED', '#04CCFD', '#03C7C7', '#9F6DFF'];
       const starArr = [];
       let status = 0;
       for (let i = 0; i < 1000; i++) {
@@ -77,13 +76,20 @@
         const screenH = document.documentElement.clientHeight;
         const star = document.createElement('span');
         star.className = 'star';
-        const width = Math.random() * 16;
-        const colorIndex = parseInt(Math.random() * 3);
+        const width = 2 * (2 + Math.random() * 8);
+        const colorIndex = parseInt(Math.random() * 4);
         const starColor = colorArr[colorIndex];
         const bgColor = colorRgba(starColor, 0.6 + Math.random());
         const lightColor = colorRgba(starColor, 0.5);
-        const x = parseInt(Math.random() * screenW * 4);
-        const y = parseInt(Math.random() * screenH * 4);
+
+        const directionX = Math.random() < 0.5 ? -1 : 1;
+        const directionY = Math.random() < 0.5 ? -1 : 1;
+        const spreadX = directionX ? 2 : 1;
+        const spreadY = directionY ? 2 : 1;
+
+        const x = directionX * Math.floor(Math.random() * screenW * spreadX);
+        const y = directionY * Math.floor(Math.random() * screenH * spreadY);
+
         star.style.width = parseInt(width) + 'px';
         star.style.height = parseInt(width) + 'px';
         star.style.background = bgColor;
