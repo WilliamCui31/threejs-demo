@@ -64,6 +64,10 @@
       const ctx = canvas.getContext('2d');
 
       var POINTS = [];
+      var MOUSE = {
+        x: 0,
+        y: 0,
+      };
 
       function Point(x, y, r, g, b, a) {
         var angle = Math.random() * 6.28;
@@ -91,18 +95,75 @@
           return this.y;
         };
 
-        this.settleTo = function () {
+        this.resetTarget = function () {
+          this.target_x = canvas.width / 2 - this.dest_x;
+          this.target_y = canvas.height / 2 - this.dest_y;
+        };
+
+        this.fleeFrom = function (x, y) {
+          this.velx -= ((MOUSE.x - this.x) * FLEE_SPEED) / 10;
+          this.vely -= ((MOUSE.y - this.y) * FLEE_SPEED) / 10;
+        };
+
+        this.settleTo = function (x, y) {
           this.velx += ((this.target_x - this.x) * SETTLE_SPEED) / 100;
           this.vely += ((this.target_y - this.y) * SETTLE_SPEED) / 100;
           this.velx -= this.velx * (1 - VELOCITY_RETENTION);
           this.vely -= this.vely * (1 - VELOCITY_RETENTION);
         };
 
+        this.scatter = function () {
+          var unit = this.unitVecToMouse();
+          var vel = SCATTER_VELOCITY * 10 * (0.5 + Math.random() / 2);
+          this.velx = -unit.x * vel;
+          this.vely = -unit.y * vel;
+        };
+
         this.move = function () {
-          this.settleTo();
+          if (this.distanceToMouse() <= FLEE_DISTANCE) {
+            this.fleeFrom(MOUSE.x, MOUSE.y);
+          } else {
+            this.settleTo(this.target_x, this.target_y);
+          }
+
+          if (this.x + this.velx < 0 || this.x + this.velx >= canvas.width) {
+            this.velx *= -1;
+          }
+          if (this.y + this.vely < 0 || this.y + this.vely >= canvas.height) {
+            this.vely *= -1;
+          }
 
           this.x += this.velx;
           this.y += this.vely;
+        };
+
+        this.distanceToTarget = function () {
+          return this.distanceTo(this.target_x, this.target_y);
+        };
+
+        this.distanceToMouse = function () {
+          return this.distanceTo(MOUSE.x, MOUSE.y);
+        };
+
+        this.distanceTo = function (x, y) {
+          return Math.sqrt((x - this.x) * (x - this.x) + (y - this.y) * (y - this.y));
+        };
+
+        this.unitVecToTarget = function () {
+          return this.unitVecTo(this.target_x, this.target_y);
+        };
+
+        this.unitVecToMouse = function () {
+          return this.unitVecTo(MOUSE.x, MOUSE.y);
+        };
+
+        this.unitVecTo = function (x, y) {
+          var dx = x - this.x;
+          var dy = y - this.y;
+          return {
+            x: dx / Math.sqrt(dx * dx + dy * dy),
+            y: dy / Math.sqrt(dx * dx + dy * dy),
+          };
         };
       }
 
@@ -110,6 +171,23 @@
         resizeCanvas();
         adjustText();
       });
+
+      if (FLEE) {
+        window.addEventListener('mousemove', function (event) {
+          MOUSE.x = event.clientX;
+          MOUSE.y = event.clientY;
+        });
+      }
+
+      if (SCATTER) {
+        window.addEventListener('click', function (event) {
+          MOUSE.x = event.clientX;
+          MOUSE.y = event.clientY;
+          for (var i = 0; i < POINTS.length; i++) {
+            POINTS[i].scatter();
+          }
+        });
+      }
 
       function resizeCanvas() {
         canvas.width = window.innerWidth;
@@ -136,7 +214,6 @@
             break;
           }
         }
-        // console.log('data: ', data, data.length, isBlank);
 
         if (!isBlank) {
           var count = 0;
@@ -195,8 +272,7 @@
         var point;
         for (var i = 0; i < POINTS.length; i++) {
           point = POINTS[i];
-          // ctx.fillStyle = 'rgba(' + point.r + ',' + point.g + ',' + point.b + ',' + point.a + ')';
-          ctx.fillStyle = '#0f0';
+          ctx.fillStyle = 'rgba(' + point.r + ',' + point.g + ',' + point.b + ',' + point.a + ')';
           ctx.beginPath();
           ctx.arc(point.getX(), point.getY(), SIZE, 0, 2 * Math.PI);
           ctx.fill();
