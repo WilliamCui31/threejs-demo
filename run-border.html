@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+  <head>
+    <meta charset="UTF-8" />
+    <!--禁止ios渲染-->
+    <meta name="format-detection" content="telephone=no" />
+    <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0" />
+    <style type="text/css">
+      .bb,
+      .bb::before,
+      .bb::after {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+      }
+
+      .bb {
+        width: 200px;
+        height: 200px;
+        margin: auto;
+        border: 1px solid rgba(0, 255, 0, 0.6)
+      }
+      /*单方向运动*/
+      .bb::after {
+        content: '';
+        z-index: -1;
+        margin: -5%;
+        box-shadow: inset 0 0 0 2px red;
+        animation: clipMe 16s linear infinite;
+      }
+      /*相对运动*/
+      /*.bb::before, .bb::after {content: '';z-index: -1;margin: -5%;box-shadow: inset 0 0 0 2px;
+    animation: clipMe 8s linear infinite;
+    }
+    .bb::before {animation-delay: -4s;}*/
+      .bb:hover::after,
+      .bb:hover::before {
+        background-color: rgba(255, 0, 0, 0.3);
+      }
+      /*clip 属性剪裁绝对定位元素。所有主流浏览器都支持 clip 属性
+    rect (top, right, bottom, left)*/
+      @keyframes clipMe {
+        0%,
+        100% {
+          clip: rect(0px, 220px, 220px, 217px);
+        }
+        25% {
+          clip: rect(0px, 220px, 3px, 0px);
+        }
+        50% {
+          clip: rect(0px, 3px, 220px, 0px);
+        }
+        75% {
+          clip: rect(217px, 220px, 220px, 0px);
+        }
+      }
+    </style>
+    <title>围绕元素边框运动</title>
+  </head>
+  <body>
+    <div class="bb"></div>
+  </body>
+</html>
